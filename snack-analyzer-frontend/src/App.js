@@ -37,7 +37,7 @@ function App() {
   useEffect(() => {
     if (result && result.ingredients_analysis && profile) {
       const reExplain = async () => {
-        const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+        const API_URL = getApiUrl();
 
         try {
           setIsPersonalizing(true);
@@ -67,48 +67,49 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
-  const analyzeSnack = async () => {
-    const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+  // Helper to get clean API URL
+  const getApiUrl = () => {
+    const url = process.env.REACT_APP_API_URL || "http://localhost:8000";
+    return url.endsWith('/') ? url.slice(0, -1) : url;
+  };
 
+  const analyzeSnack = async () => {
     if (!image) {
       setError("Please select an image first");
       return;
     }
+
+    setLoading(true);
+    setResult(null);
+    setError(null);
 
     const formData = new FormData();
     formData.append("file", image);
     formData.append("profile", profile);
 
     try {
-      setLoading(true);
-      setError("");
-
-      const response = await axios.post(
-        `${API_URL}/analyze`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const API_URL = getApiUrl();
+      const response = await axios.post(`${API_URL}/analyze`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response.data.error) {
         setError(`Analysis failed: ${response.data.error}`);
-        console.error("Backend error:", response.data);
-        return;
-      }
-
-      if (!response.data.ingredients_analysis || !response.data.explanation) {
-        setError("Invalid response from server. Please try again.");
-        console.error("Invalid response:", response.data);
         return;
       }
 
       setResult(response.data);
+
+      // Smooth scroll to results
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
 
     } catch (err) {
+      console.error("Error analyzing snack:", err);
       setError("Analysis failed. Please check if the backend is running.");
-      console.error("Request error:", err);
     } finally {
       setLoading(false);
     }
