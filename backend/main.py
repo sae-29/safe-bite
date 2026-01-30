@@ -26,8 +26,9 @@ app = FastAPI(title="AI Snack Analyzer")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # Local development
-        "*"  # Allow all for now, we'll update after deployment
+        "http://localhost:3000",
+        "https://safebite-flax.vercel.app",
+        "https://safebite-flax.vercel.app/"
     ],
     allow_credentials=True,
     allow_methods=["*"],
