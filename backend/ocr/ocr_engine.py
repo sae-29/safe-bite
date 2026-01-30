@@ -16,6 +16,8 @@ def extract_text(image_path: str) -> str:
         
         # Try standard name first
         model_name = "gemini-1.5-flash"
+        prompt = "Extract all text from this food label, specifically focusing on the ingredients list. Return the raw text."
+        
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content([prompt, img])
