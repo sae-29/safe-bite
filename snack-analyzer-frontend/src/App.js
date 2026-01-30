@@ -259,8 +259,14 @@ function App() {
 
                 {/* Risk Explanation */}
                 <div className="risk-explanation-box">
-                  <h3>⚠️ Why This Is Risky for {profile}</h3>
-                  <p>{result.explanation.harm_explanation || 'Analysis in progress...'}</p>
+                  <h3>1️⃣ Why This Product Is Risky for {profile}</h3>
+                  <div className="explanation-content">
+                    <p className="main-explanation">
+                      {typeof result.explanation.harm_explanation === 'string'
+                        ? result.explanation.harm_explanation
+                        : JSON.stringify(result.explanation.harm_explanation)}
+                    </p>
+                  </div>
 
                   {result.explanation.risk_factors && result.explanation.risk_factors.length > 0 && (
                     <ul className="risk-list">
@@ -274,15 +280,17 @@ function App() {
                 {/* Natural Alternatives */}
                 {result.explanation.alternatives && result.explanation.alternatives.length > 0 && (
                   <div className="alternatives-box">
-                    <h3>🥗 Natural Alternatives</h3>
-                    <p className="section-subtitle">Homemade & healthier options</p>
+                    <h3>2️⃣ Safer Food Alternatives (Natural / Homemade)</h3>
+                    <p className="section-subtitle">Practical & healthier options</p>
                     <div className="alt-cards">
                       {result.explanation.alternatives.map((alt, i) => (
                         <div key={i} className="alt-card">
-                          <h4>🍃 {alt.name || 'Alternative'}</h4>
+                          <h4>🥗 {alt.name || 'Alternative'}</h4>
                           <p><strong>Why:</strong> {alt.why || 'Healthier option'}</p>
-                          <p><strong>Benefit:</strong> {alt.benefit || 'Better nutrition'}</p>
-                          <div className="action-tag">Try: {alt.how_to_use || 'As needed'}</div>
+                          <div className="tag-group">
+                            <span className="benefit-tag">Benefit: {alt.benefit}</span>
+                            <span className="usage-tag">Tip: {alt.how_to_use}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -292,14 +300,14 @@ function App() {
                 {/* Commercial Products */}
                 {result.explanation.commercial_alternatives && result.explanation.commercial_alternatives.length > 0 && (
                   <div className="commercial-box">
-                    <h3>🛒 Healthier Products You Can Buy</h3>
-                    <p className="section-subtitle">Available in stores & online</p>
+                    <h3>3️⃣ Commercial Healthier Product Suggestions</h3>
+                    <p className="section-subtitle">Realistic market options</p>
                     <div className="commercial-cards">
                       {result.explanation.commercial_alternatives.map((prod, i) => (
                         <div key={i} className="commercial-card">
-                          <h4>📦 {prod.product_name || 'Product'}</h4>
-                          <p><strong>Why Better:</strong> {prod.why_better || 'Healthier choice'}</p>
-                          <p className="availability">📍 {prod.availability || 'Available in stores'}</p>
+                          <h4>🛒 {prod.product_name || 'Product'}</h4>
+                          <p><strong>Why Better:</strong> {prod.why_better}</p>
+                          <p className="availability"><small>📍 {prod.availability}</small></p>
                         </div>
                       ))}
                     </div>
@@ -307,7 +315,6 @@ function App() {
                 )}
               </div>
             </div>
-
           </div>
         )}
       </div>
@@ -316,3 +323,4 @@ function App() {
 }
 
 export default App;
+

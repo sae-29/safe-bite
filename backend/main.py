@@ -3,6 +3,14 @@ from pydantic import BaseModel
 from typing import List, Dict, Any
 import uuid
 import traceback
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file (Override system/terminal variables)
+load_dotenv(override=True)
+
+api_key = os.getenv("GEMINI_API_KEY")
+print(f"DEBUG: Loaded API Key starting with: {api_key[:10] if api_key else 'None'}...")
 
 from .ocr.ocr_engine import extract_text
 from .ocr.filter import filter_ingredient_text
