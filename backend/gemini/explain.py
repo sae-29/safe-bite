@@ -1,20 +1,9 @@
-
-
-import google.generativeai as genai
+from google import genai
 import os
 import json
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"), api_version='v1')
-
-def list_available_models():
-    """Debug helper to see what models we can actually use"""
-    try:
-        models = [m.name for m in genai.list_models()]
-        print(f"DEBUG: Available Gemini Models: {models}")
-        return models
-    except Exception as e:
-        print(f"DEBUG: Could not list models: {e}")
-        return []
+# Initialize the new Gemini Client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def explain_with_gemini(analysis: list, profile: str = "General"):
     """
@@ -50,21 +39,17 @@ RETURN JSON STRUCTURE:
       "why": "Why it's better",
       "how_to_use": "Quick tip",
       "benefit": "Health benefit"
-    }},
-    {{ "name": "Natural Option 2", "why": "...", "how_to_use": "...", "benefit": "..." }},
-    {{ "name": "Natural Option 3", "why": "...", "how_to_use": "...", "benefit": "..." }}
+    }}
   ],
   "commercial_alternatives": [
     {{
-      "product_name": "Brand Name Product 1",
-      "why_better": "Why it's healthier",
-      "availability": "Where to buy"
-    }},
-    {{ "product_name": "Brand Name Product 2", "why_better": "...", "availability": "..." }},
-    {{ "product_name": "Brand Name Product 3", "why_better": "...", "availability": "..." }}
+      "product_name": "Healthier Brand 1",
+      "why_better": "Specific health benefit",
+      "availability": "Online/Stores"
+    }}
   ],
   "ingredient_explanations": {{
-    "Ingredient": "1-line explanation for {profile}"
+    "IngredientName": "Why it matters for {profile}"
   }}
 }}
 
@@ -75,57 +60,29 @@ STRICT RULES:
 """
 
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        result = model.generate_content(prompt)
+        # Using the new SDK's generate_content
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt
+        )
+        
+        text = response.text.strip()
+        
+        # Robust JSON cleaning
+        if text.startswith("```json"):
+            text = text[7:-3].strip()
+        elif text.startswith("```"):
+            text = text[3:-3].strip()
+            
+        return json.loads(text)
+
     except Exception as e:
-        if "404" in str(e):
-            print(f"ERROR: gemini-1.5-flash not found. Listing models...")
-            list_available_models()
-            # Try a fallback if flash is missing (unlikely but safe)
-            model = genai.GenerativeModel("gemini-pro")
-            result = model.generate_content(prompt)
-        else:
-            raise e
-    
-    # Clean up response to ensure valid JSON
-    text = result.text.strip()
-    if text.startswith("```json"):
-        text = text[7:-3].strip()
-    elif text.startswith("```"):
-         text = text[3:-3].strip()
-         
-    try:
-        # Clean the response text (remove Markdown code blocks)
-        cleaned_text = text.strip()
-        if cleaned_text.startswith("```json"):
-            cleaned_text = cleaned_text[7:]
-        if cleaned_text.startswith("```"):
-            cleaned_text = cleaned_text[3:]
-        if cleaned_text.endswith("```"):
-            cleaned_text = cleaned_text[:-3]
-        
-        cleaned_text = cleaned_text.strip()
-        
-        return json.loads(cleaned_text)
-    except json.JSONDecodeError as e:
-        print(f"JSON Parse Error: {e}")
-        print(f"Raw Text: {text}")
-        # Fallback: return structure with error message but valid format
+        print(f"ERROR: explain_with_gemini failed: {e}")
+        # Return valid empty structure on failure
         return {
-            "harm_explanation": "Could not generate analysis. Please try again.",
-            "risk_factors": ["Error parsing AI response"],
+            "harm_explanation": f"Analysis failed: {str(e)}",
+            "risk_factors": [],
             "alternatives": [],
             "commercial_alternatives": [],
             "ingredient_explanations": {}
         }
-    except Exception as e:
-        print(f"Unexpected Error: {e}")
-        return {
-             "harm_explanation": "An unexpected error occurred.",
-             "risk_factors": [],
-             "alternatives": [],
-             "commercial_alternatives": [],
-             "ingredient_explanations": {}
-        }
-
-

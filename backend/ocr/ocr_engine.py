@@ -1,9 +1,9 @@
-import google.generativeai as genai
+from google import genai
 import os
 from PIL import Image
 
-# Configure Gemini
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"), api_version='v1')
+# Initialize the new Gemini Client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def extract_text(image_path: str) -> str:
     """
@@ -14,23 +14,14 @@ def extract_text(image_path: str) -> str:
         # Load the image
         img = Image.open(image_path)
         
-        # Try standard name first
-        model_name = "gemini-1.5-flash"
+        # Prompt for OCR
         prompt = "Extract all text from this food label, specifically focusing on the ingredients list. Return the raw text."
         
-        try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content([prompt, img])
-        except Exception as inner_e:
-            if "404" in str(inner_e):
-                print(f"DEBUG: {model_name} failed. Checking available models...")
-                from ..gemini.explain import list_available_models
-                list_available_models()
-                # Fallback to pro if flash fails
-                model = genai.GenerativeModel("gemini-1.0-pro-vision")
-                response = model.generate_content([prompt, img])
-            else:
-                raise inner_e
+        # Using the new SDK's generate_content with image support
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=[prompt, img]
+        )
         
         if response and response.text:
             return response.text
