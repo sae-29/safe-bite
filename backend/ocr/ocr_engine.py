@@ -1,46 +1,35 @@
-import pytesseract
-from PIL import Image
-from .preprocess import preprocess_image
-
-import shutil
+import google.generativeai as genai
 import os
-import cv2
-import numpy as np
+from PIL import Image
 
-# Check if Tesseract is in PATH (Debug for Render)
-tesseract_cmd = shutil.which("tesseract")
-print(f"DEBUG: Initial Tesseract Path: {tesseract_cmd}")
+# Configure Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-if os.name == 'nt':
-    # Windows specific logic
-    known_windows_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-    if os.path.exists(known_windows_path):
-        tesseract_cmd = known_windows_path
-        print(f"DEBUG: Found Tesseract at Windows default: {tesseract_cmd}")
-    elif not tesseract_cmd:
-        # Check other locations
-        possible_paths = [
-            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
-            r"C:\Users\HP\AppData\Local\Programs\Tesseract-OCR\tesseract.exe",
-            r"D:\Program Files\Tesseract-OCR\tesseract.exe",
-            r"D:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
-            r"D:\Tesseract-OCR\tesseract.exe"
-        ]
-        for p in possible_paths:
-            if os.path.exists(p):
-                tesseract_cmd = p
-                print(f"DEBUG: Found Tesseract at: {tesseract_cmd}")
-                break
-
-if tesseract_cmd:
-    print(f"DEBUG: Setting Tesseract CMD to: {tesseract_cmd}")
-    pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
-else:
-    print("WARNING: Tesseract-OCR not found in PATH or common locations.")
-
-
-
-def extract_text(image_path):
-    processed = preprocess_image(image_path)
-    text = pytesseract.image_to_string(processed)
-    return text
+def extract_text(image_path: str) -> str:
+    """
+    Extracts text from an image using Gemini 1.5 Flash (Vision).
+    Replaces local Tesseract OCR for better accuracy and easier deployment.
+    """
+    try:
+        # Load the image
+        img = Image.open(image_path)
+        
+        # Initialize model
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        
+        # Prompt for OCR
+        prompt = "Extract all text from this food label, specifically focusing on the ingredients list. Return the raw text."
+        
+        # Generate content
+        response = model.generate_content([prompt, img])
+        
+        if response and response.text:
+            return response.text
+        return ""
+        
+    except Exception as e:
+        print(f"ERROR: Gemini Vision OCR failed: {e}")
+        return ""
+    finally:
+        # We don't delete the temp file here, main.py handles it
+        pass
