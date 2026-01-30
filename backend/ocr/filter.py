@@ -1,7 +1,8 @@
-import google.generativeai as genai
+from google import genai
 import os
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# Initialize the new Gemini Client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def filter_ingredient_text(raw_ocr_text: str) -> str:
     """
@@ -58,14 +59,14 @@ Do NOT include nutritional values, manufacturing info, or storage instructions.
 """
     
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        # Using the new SDK's generate_content
+        # Switching to gemini-1.5-flash for consistency and stability
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt
+        )
         
-        print(f"DEBUG FILTER: Sending to Gemini for filtering...")
-        print(f"DEBUG FILTER: Raw text length: {len(raw_ocr_text)} chars")
-        
-        result = model.generate_content(prompt)
-        
-        filtered_text = result.text.strip()
+        filtered_text = response.text.strip()
         
         print(f"DEBUG FILTER: Gemini returned: {filtered_text[:200]}...")
         
@@ -82,4 +83,3 @@ Do NOT include nutritional values, manufacturing info, or storage instructions.
         print(f"ERROR FILTER: Falling back to raw text")
         # Fallback: return original text if filtering fails
         return raw_ocr_text
-
