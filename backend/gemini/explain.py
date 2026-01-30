@@ -2,8 +2,11 @@ from google import genai
 import os
 import json
 
-# Initialize the new Gemini Client
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+# Initialize the new Gemini Client forcing v1 stable API
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY"),
+    http_options={'api_version': 'v1'}
+)
 
 def explain_with_gemini(analysis: list, profile: str = "General"):
     """
