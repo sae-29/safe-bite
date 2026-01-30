@@ -3,10 +3,43 @@ import os
 import json
 
 # Initialize the new Gemini Client forcing v1 stable API
+# Removing forced api_version to let SDK decide best default
 client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY"),
-    http_options={'api_version': 'v1'}
+    api_key=os.getenv("GEMINI_API_KEY")
 )
+
+def get_best_model(client):
+    """
+    Intelligently finds an available model for the user's key.
+    Solves 404 errors by picking what is actually enabled.
+    """
+    try:
+        models = [m.name for m in client.models.list()]
+        print(f"DEBUG: Available models for this key: {models}")
+        
+        # Priority list
+        priorities = [
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-latest",
+            "gemini-2.0-flash-exp",
+            "gemini-1.5-pro",
+            "gemini-1.0-pro"
+        ]
+        
+        for p in priorities:
+            for m in models:
+                if p == m or f"models/{p}" == m:
+                    return m
+        
+        # Fallback to first compatible model
+        for m in models:
+            if "flash" in m.lower() or "pro" in m.lower():
+                return m
+                
+        return "gemini-1.5-flash" # Absolute fallback
+    except Exception as e:
+        print(f"DEBUG: Model auto-discovery failed: {e}")
+        return "gemini-1.5-flash"
 
 def explain_with_gemini(analysis: list, profile: str = "General"):
     """
@@ -63,15 +96,16 @@ STRICT RULES:
 """
 
     try:
-        # Using the new SDK's generate_content
+        model_name = get_best_model(client)
+        print(f"DEBUG: Using model '{model_name}' for explanation.")
+        
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model=model_name,
             contents=prompt
         )
         
         text = response.text.strip()
         
-        # Robust JSON cleaning
         if text.startswith("```json"):
             text = text[7:-3].strip()
         elif text.startswith("```"):
@@ -81,7 +115,6 @@ STRICT RULES:
 
     except Exception as e:
         print(f"ERROR: explain_with_gemini failed: {e}")
-        # Return valid empty structure on failure
         return {
             "harm_explanation": f"Analysis failed: {str(e)}",
             "risk_factors": [],

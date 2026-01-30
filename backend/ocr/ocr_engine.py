@@ -2,27 +2,40 @@ from google import genai
 import os
 from PIL import Image
 
-# Initialize the new Gemini Client forcing v1 stable API
+# Initialize the new Gemini Client
 client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY"),
-    http_options={'api_version': 'v1'}
+    api_key=os.getenv("GEMINI_API_KEY")
 )
+
+def get_best_model(client):
+    try:
+        models = [m.name for m in client.models.list()]
+        priorities = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-2.0-flash-exp", "gemini-1.5-pro"]
+        for p in priorities:
+            for m in models:
+                if p == m or f"models/{p}" == m:
+                    return m
+        for m in models:
+            if "flash" in m.lower() or "pro" in m.lower():
+                return m
+        return "gemini-1.5-flash"
+    except:
+        return "gemini-1.5-flash"
 
 def extract_text(image_path: str) -> str:
     """
-    Extracts text from an image using Gemini 1.5 Flash (Vision).
-    Replaces local Tesseract OCR for better accuracy and easier deployment.
+    Extracts text from an image using Gemini (Vision).
     """
     try:
-        # Load the image
         img = Image.open(image_path)
-        
-        # Prompt for OCR
         prompt = "Extract all text from this food label, specifically focusing on the ingredients list. Return the raw text."
         
-        # Using the new SDK's generate_content with image support
+        # Auto-discover working model
+        model_name = get_best_model(client)
+        print(f"DEBUG OCR: Using model '{model_name}'")
+        
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model=model_name,
             contents=[prompt, img]
         )
         
@@ -34,5 +47,4 @@ def extract_text(image_path: str) -> str:
         print(f"ERROR: Gemini Vision OCR failed: {e}")
         return ""
     finally:
-        # We don't delete the temp file here, main.py handles it
         pass
