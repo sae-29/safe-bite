@@ -64,7 +64,7 @@ STRICT RULES:
 3. RETURN ONLY JSON.
 """
 
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-1.5-flash")
     result = model.generate_content(prompt)
     
     # Clean up response to ensure valid JSON
