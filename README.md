@@ -62,8 +62,8 @@ The app will be running at `http://localhost:3000`.
 
 ## 🏗️ Technology Stack
 - **Frontend**: React, Vanilla CSS3 (Custom Glassmorphism), Axios
-- **Backend**: FastAPI (Python), Uvicorn, Pydantic
-- **AI/ML**: Google GenAI SDK (Gemini 1.5 Flash), Custom Keyword Scoring Engine
+- **Backend**: Ml model, FastAPI (Python), Uvicorn, Pydantic
+- **AI/ML**: DistilBert Model(Fine Tuning), Google GenAI SDK (Gemini 1.5 Flash), Custom Keyword Scoring Engine(ocr)
 - **Deployment**: Vercel (Frontend), Render (Backend)
 
 ## 🛡️ Security
