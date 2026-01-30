@@ -54,35 +54,30 @@ You are a food safety and nutrition expert. Your goal is to provide a structured
 
 User Profile: {profile}
 
-Ingredient analysis data:
+Ingredient analysis data (includes severity: Harmfull, Moderate, Safe):
 {structured_input}
 
-CRITICAL INSTRUCTION:
-Generate a JSON response with exactly these 3 sections.
-Keep explanations SHORT and PUNCHY (1-2 sentences max).
+CRITICAL INSTRUCTIONS:
+1. Generate a JSON response with exactly these 5 keys: "harm_explanation", "risk_factors", "alternatives", "commercial_alternatives", "ingredient_explanations".
+2. **Harm Explanation**: Directly explain why this product is risky for {profile}. Use the 'Harmfull' and 'Moderate' tags from the input data to justify your reasoning. Keep it SHORT (1-2 sentences).
+3. **Risk Factors**: List exactly 3 specific risk factors found in the data.
+4. **Natural Alternatives**: Provide exactly **3** natural/homemade alternatives.
+5. **Commercial Alternatives**: Provide exactly **3** specific, healthier brand-name product suggestions available in market.
+6. **Ingredient Explanations**: Provide a brief (1-line) explanation for EVERY ingredient marked as 'Harmfull' or 'Moderate' in the input.
 
 RETURN JSON STRUCTURE:
 {{
-  "harm_explanation": "Directly explain why this product is risky for {profile}. Focus on the specific ingredients (e.g., 'High sugar affects blood glucose'). Max 2 sentences.",
-  "risk_factors": [
-    "Factor 1: Brief explanation",
-    "Factor 2: Brief explanation",
-    "Factor 3: Brief explanation"
-  ],
+  "harm_explanation": "Summary relative to {profile} and the detected risks.",
+  "risk_factors": ["Risk 1", "Risk 2", "Risk 3"],
   "alternatives": [
-    {{
-      "name": "Natural Option 1",
-      "why": "Why it's better",
-      "how_to_use": "Quick tip",
-      "benefit": "Health benefit"
-    }}
+    {{ "name": "Natural A", "why": "...", "how_to_use": "...", "benefit": "..." }},
+    {{ "name": "Natural B", "why": "...", "how_to_use": "...", "benefit": "..." }},
+    {{ "name": "Natural C", "why": "...", "how_to_use": "...", "benefit": "..." }}
   ],
   "commercial_alternatives": [
-    {{
-      "product_name": "Healthier Brand 1",
-      "why_better": "Specific health benefit",
-      "availability": "Online/Stores"
-    }}
+    {{ "product_name": "Healthier Brand X", "why_better": "...", "availability": "..." }},
+    {{ "product_name": "Healthier Brand Y", "why_better": "...", "availability": "..." }},
+    {{ "product_name": "Healthier Brand Z", "why_better": "...", "availability": "..." }}
   ],
   "ingredient_explanations": {{
     "IngredientName": "Why it matters for {profile}"
@@ -93,6 +88,7 @@ STRICT RULES:
 1. NO Markdown (no ```json blocks).
 2. NO conversational text.
 3. RETURN ONLY JSON.
+4. Ensure exactly 3 items in 'alternatives' and 'commercial_alternatives'.
 """
 
     try:
