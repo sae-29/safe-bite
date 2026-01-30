@@ -45,14 +45,9 @@ yarn-error.log*
 build/
 .cache/
 
-# ML Models (excluded - too large for GitHub)
-backend/ml/models/*.pt
-backend/ml/models/*.bin
-backend/ml/models/final_model/
-backend/ml/models/**/*.bin
-backend/ml/models/**/*.pt
+# ML Models (if large)
+# backend/ml/models/*.pt
+# backend/ml/models/*.bin
 
 # Data
-ingredient_risk.json
-data/processed/ingredient_risk.json
-
+# ingredient_risk.json (if too large)
