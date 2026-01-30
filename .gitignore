@@ -19,6 +19,7 @@ build/
 temp_*.jpg
 *.log
 *.txt
+!requirements.txt
 debug_*.py
 test_*.py
 verify_*.py
