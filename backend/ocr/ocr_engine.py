@@ -15,7 +15,7 @@ def extract_text(image_path: str) -> str:
         img = Image.open(image_path)
         
         # Initialize model
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash-latest")
         
         # Prompt for OCR
         prompt = "Extract all text from this food label, specifically focusing on the ingredients list. Return the raw text."
