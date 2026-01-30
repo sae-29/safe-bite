@@ -1,58 +1,60 @@
-from transformers import DistilBertForSequenceClassification, DistilBertTokenizerFast
-import torch
+import re
 
 # =========================
-# LOAD TRAINED MODEL
+# KEYWORD-BASED CLASSIFIER (Lightweight for Deployment)
 # =========================
 
-MODEL_PATH = "D:\\snack-analyzer\\backend\\ml\\models\\final_model"
+# Lists of concern
+HARMFUL_KEYWORDS = [
+    # Artificial Preservatives
+    "benzoate", "sorbate", "nitrate", "nitrite", "bbq", "tbhq", "bha", "bht", "gallate", "metabisulfite",
+    # Artificial Sweeteners
+    "aspartame", "sucralose", "saccharin", "acesulfame", "neotame",
+    # Flavor Enhancers
+    "monosodium glutamate", "msg", "glutamate", "disodium",
+    # Artificial Colors
+    "red 40", "yellow 5", "yellow 6", "blue 1", "blue 2", "artificial color", "caramel color",
+    # Unhealthy Fats
+    "hydrogenated", "trans fat", "corn oil", "soybean oil", "palm oil", "margarine",
+    # Other
+    "high fructose corn syrup", "corn syrup"
+]
 
-loaded_tokenizer = DistilBertTokenizerFast.from_pretrained(MODEL_PATH)
-loaded_model = DistilBertForSequenceClassification.from_pretrained(MODEL_PATH)
-
-loaded_model.eval()
-
-# Use GPU if available
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-loaded_model.to(DEVICE)
-
-# =========================
-# LABEL MAP (MUST MATCH TRAINING)
-# =========================
-
-label_map = {
-    0: "Safe",
-    1: "Moderate",
-    2: "Harmfull"
-}
-
-# =========================
-# PREDICTION FUNCTION
-# =========================
+MODERATE_KEYWORDS = [
+    # Refined Sugars
+    "sugar", "syrup", "dextrose", "fructose", "sucrose", "maltodextrin", "glucose", "cane",
+    # Additives
+    "gum", "emulsifier", "stabilizer", "lecithin", "modified starch", "flavor", "extract",
+    # Salts
+    "sodium", "salt"
+]
 
 def predict_ingredient(ingredient_text: str):
     """
-    Predict risk category for a single ingredient
+    Predict risk category for a single ingredient using keyword matching.
+    Replaces heavy ML model for lightweight deployment.
     """
-
-    inputs = loaded_tokenizer(
-        ingredient_text,
-        return_tensors="pt",
-        truncation=True,
-        padding=True
-    )
-
-    inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
-
-    with torch.no_grad():
-        outputs = loaded_model(**inputs)
-
-    logits = outputs.logits
-    predicted_class_id = torch.argmax(logits, dim=1).item()
-    confidence = torch.softmax(logits, dim=1)[0][predicted_class_id].item()
-
+    text_lower = ingredient_text.lower()
+    
+    # Check Harmful
+    if any(k in text_lower for k in HARMFUL_KEYWORDS):
+        return {
+            "ingredient": ingredient_text,
+            "risk": "Harmfull",  # Kept spelling to match frontend
+            "confidence": 0.95
+        }
+        
+    # Check Moderate
+    if any(k in text_lower for k in MODERATE_KEYWORDS):
+        return {
+            "ingredient": ingredient_text,
+            "risk": "Moderate",
+            "confidence": 0.90
+        }
+        
+    # Default to Safe
     return {
         "ingredient": ingredient_text,
-        "risk": label_map.get(predicted_class_id, "Unknown"),
-        "confidence": round(confidence, 2)
+        "risk": "Safe",
+        "confidence": 0.85
     }
