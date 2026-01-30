@@ -23,6 +23,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="AI Snack Analyzer")
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "api_key_loaded": os.getenv("GEMINI_API_KEY") is not None}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
