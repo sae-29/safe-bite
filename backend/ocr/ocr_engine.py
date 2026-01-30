@@ -3,7 +3,7 @@ import os
 from PIL import Image
 
 # Configure Gemini
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"), api_version='v1')
 
 def extract_text(image_path: str) -> str:
     """

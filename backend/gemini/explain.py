@@ -4,7 +4,7 @@ import google.generativeai as genai
 import os
 import json
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"), api_version='v1')
 
 def list_available_models():
     """Debug helper to see what models we can actually use"""
