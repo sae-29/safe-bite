@@ -14,14 +14,21 @@ def extract_text(image_path: str) -> str:
         # Load the image
         img = Image.open(image_path)
         
-        # Initialize model
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
-        
-        # Prompt for OCR
-        prompt = "Extract all text from this food label, specifically focusing on the ingredients list. Return the raw text."
-        
-        # Generate content
-        response = model.generate_content([prompt, img])
+        # Try standard name first
+        model_name = "gemini-1.5-flash"
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content([prompt, img])
+        except Exception as inner_e:
+            if "404" in str(inner_e):
+                print(f"DEBUG: {model_name} failed. Checking available models...")
+                from ..gemini.explain import list_available_models
+                list_available_models()
+                # Fallback to pro if flash fails
+                model = genai.GenerativeModel("gemini-1.0-pro-vision")
+                response = model.generate_content([prompt, img])
+            else:
+                raise inner_e
         
         if response and response.text:
             return response.text

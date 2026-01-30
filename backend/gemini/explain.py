@@ -6,6 +6,16 @@ import json
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
+def list_available_models():
+    """Debug helper to see what models we can actually use"""
+    try:
+        models = [m.name for m in genai.list_models()]
+        print(f"DEBUG: Available Gemini Models: {models}")
+        return models
+    except Exception as e:
+        print(f"DEBUG: Could not list models: {e}")
+        return []
+
 def explain_with_gemini(analysis: list, profile: str = "General"):
     """
     analysis: list of ML predictions
@@ -64,8 +74,18 @@ STRICT RULES:
 3. RETURN ONLY JSON.
 """
 
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
-    result = model.generate_content(prompt)
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        result = model.generate_content(prompt)
+    except Exception as e:
+        if "404" in str(e):
+            print(f"ERROR: gemini-1.5-flash not found. Listing models...")
+            list_available_models()
+            # Try a fallback if flash is missing (unlikely but safe)
+            model = genai.GenerativeModel("gemini-pro")
+            result = model.generate_content(prompt)
+        else:
+            raise e
     
     # Clean up response to ensure valid JSON
     text = result.text.strip()
